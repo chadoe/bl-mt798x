@@ -446,6 +446,10 @@ static const struct bootmenu_entry mtd_bootmenu_entries[] = {
 		.cmd = "mtkupgrade simg"
 	},
 	{
+		.desc = "Reset U-Boot environment to default",
+		.cmd = "env default -a; saveenv; echo \"Environment reset to default. Rebooting...\"; reset"
+	},
+	{
 		.desc = "Load image",
 		.cmd = "mtkload"
 	},
