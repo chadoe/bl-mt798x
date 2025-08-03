@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 /dts-v1/;
 
-// Include the base dtsi for MT7981 from the 20230718 U-Boot tree.
 #include "mt7981.dtsi"
 
 #include <dt-bindings/gpio/gpio.h>
@@ -13,47 +12,42 @@
 
 	aliases {
 		serial0 = &uart0;
-		ethernet0 = &eth; // The single physical Ethernet port
-		spi0 = &spi0;     // Assuming SPI flash for storage
+		ethernet0 = &eth;
+		spi0 = &spi0;
 	};
 
 	chosen {
 		stdout-path = "serial0:115200n8";
-		bootargs = "console=ttyS0,115200n8"; // Basic bootargs
+		bootargs = "console=ttyS0,115200n8";
 	};
 	
 	config {
 		bootcmd = "mtkboardboot";
-		blink_led = "red"; // Red LED will blink during boot
-		system_led = "red";  // Red LED will be solid system status at prompt
+		blink_led = "red";
+		system_led = "red";
 	};
 	
 	memory@40000000 {
 		device_type = "memory";
-		// Using memory definition from mt7981-clt-r30b1.dts (20230718 version)
-		reg = <0x40000000 0x10000000>; // 256MB RAM
+		reg = <0x40000000 0x10000000>;
 	};
 
-	// MTD layout - adapt from mt7981-clt-r30b1.dts or define your specific one.
 	mtd-layout {
 		compatible = "mediatek,mtd-layout";
 		layout@0 {
 			label = "default";
-			// mtd layout for clt_r30b1 stock ubi or openwrt-stock/immortalwrt-stock firmware
 			mtdids = "nmbm0=nmbm0";
 			mtdparts = "nmbm0:1024k(bl2),512k(u-boot-env),2048k(Factory),2048k(fip),64M(ubi)";
 		};
 
 		layout@1 {
 			label = "immortalwrt-112m";
-			// mtd layout for immortalwrt/openwrt 112M ubi firmware
 			mtdids = "nmbm0=nmbm0";
 			mtdparts = "nmbm0:1024k(bl2),512k(u-boot-env),2048k(Factory),2048k(fip),112M(ubi)";
 		};
 
 		layout@2 {
 			label = "qwrt";
-			// mtd layout for lean qwrt
 			mtdids = "nmbm0=nmbm0";
 			mtdparts = "nmbm0:1024k(bl2),512k(u-boot-env),2048k(Factory),2048k(fip),1024k(rsv0),110M(ubi)";
 		};
@@ -62,31 +56,27 @@
 	leds {
 		compatible = "gpio-leds";
 
-		// Green LED from extracted DTS, not used for U-Boot system/blink
-		green_led: green { // Node name matches extracted DTS label
-			label = "green"; // Label matches extracted DTS
-			gpios = <&gpio 35 GPIO_ACTIVE_LOW>; /* Confirmed by gpio clear 35 turns it ON */
+		green_led: green {
+			label = "green";
+			gpios = <&gpio 35 GPIO_ACTIVE_LOW>;
 			default-state = "off"; 
 		};
 
-		// Red LED from extracted DTS, used as Blink and System/Power LED
-		red_led: red { // Node name matches extracted DTS label
-			label = "red"; // Label matches extracted DTS
-			gpios = <&gpio 5 GPIO_ACTIVE_LOW>; /* Confirmed by gpio toggle 5 (value 0) turns it ON */
-			default-state = "on"; /* System LED should be on by default */
+		red_led: red {
+			label = "red";
+			gpios = <&gpio 5 GPIO_ACTIVE_LOW>;
+			default-state = "on";
 		};
  
-		// Blue LED from extracted DTS
-		blue_led: blue { // Node name matches extracted DTS label
-			label = "blue"; // Label matches extracted DTS
-			gpios = <&gpio 34 GPIO_ACTIVE_LOW>; /* From extracted DTS */
+		blue_led: blue {
+			label = "blue";
+			gpios = <&gpio 34 GPIO_ACTIVE_LOW>;
 			default-state = "off";
 		};
 
-		// WAN LED from extracted DTS (GPIO controlled)
-		wan_led: wan { // Node name matches extracted DTS label
-			label = "wan"; // Label matches extracted DTS
-			gpios = <&gpio 6 GPIO_ACTIVE_LOW>; /* From extracted DTS */
+		wan_led: wan {
+			label = "wan";
+			gpios = <&gpio 6 GPIO_ACTIVE_LOW>;
 			default-state = "on";
 		};
 	};
@@ -94,17 +84,12 @@
 	gpio-keys {
 		compatible = "gpio-keys";
 
-		// Reset button - datasheet pin E18 (GPIO_RESET)
-		// Pin sharing table: GPIO_RESET (E18) is GPIO1
-		// Matches extracted Linux DTS.
 		reset_button: reset {
 			label = "reset";
 			linux,code = <KEY_RESTART>;
 			gpios = <&gpio 1 GPIO_ACTIVE_LOW>;
 		};
 
-		// WPS button - datasheet pin F17 (GPIO_WPS)
-		// Pin sharing table: GPIO_WPS (F17) is GPIO0
 		wps_button: wps {
 			label = "wps";
 			linux,code = <KEY_WPS_BUTTON>;
@@ -113,18 +98,16 @@
 	};
 };
 
-&uart0 { // Datasheet pins G16 (UART0_RXD), G17 (UART0_TXD)
+&uart0 {
 	status = "okay";
-	// Pinctrl for UART0 is often default/implicit if using dedicated pins.
 };
 
-&spi0 { // Assuming SPI-NAND as per mt7981-clt-r30b1.dts (20230718 version)
+&spi0 {
 	#address-cells = <1>;
 	#size-cells = <0>;
 	pinctrl-names = "default";
-	pinctrl-0 = <&spi_flash_pins>; // Defined in &pinctrl below
+	pinctrl-0 = <&spi_flash_pins>;
 	status = "okay";
-	// Properties from mt7981-clt-r30b1.dts &spi0 node
 	must_tx;
 	enhance_timing;
 	dma_ext;
@@ -133,109 +116,51 @@
 	tick_dly = <2>;
 	sample_sel = <0>;
 
-	spi_nand@0 { // Label this nmbm0 if mtdids uses it
+	spi_nand@0 {
 		compatible = "spi-nand";
 		reg = <0>; // Chip select 0
-		spi-max-frequency = <52000000>; // From mt7981-clt-r30b1.dts
+		spi-max-frequency = <52000000>;
 	};
 };
 
 &eth {
 	status = "okay";
-
-	// Configure for the single physical WAN port using GMAC1.
 	mediatek,gmac-id = <1>;
-
-	// Matching extracted Linux DTS and GL-X3000 patch which use "gmii"
 	phy-mode = "gmii";
+	phy-handle = <&eth_phy0>;
 
-	/* The mt7981.dtsi (20230718 version) defaults mediatek,sgmiisys to &sgmiisys0 (for GMAC0).
-	 * The extracted Linux DTS lists both. The GL-X3000 patch does not explicitly set this for GMAC1.
-	 * For U-Boot, explicitly setting for GMAC1 is often safer if defaults aren't clear.
-	 * However, testing without it first to match GL-X3000. */
-	// mediatek,sgmiisys = <&sgmiisys1>;
-
-	/* Reset GPIO for the external PHY.
-	 * Datasheet pin M18 (GBE_RESET), Pin sharing table: GBE_RESET is GPIO39.
-	 * Neither extracted Linux DTS (for this PHY) nor GL-X3000 U-Boot DTS define reset-gpios for GMAC1.
-	 * Testing without explicit reset. */
-	// reset-gpios = <&gpio 39 GPIO_ACTIVE_LOW>;
-
-	phy-handle = <&eth_phy0>; // Reference to the external PHY node
-
-	/* Pinctrl for Ethernet - Extracted Linux DTS and GL-X3000 patch do not define these explicitly for GMAC1.
-	 * Relying on defaults from mt7981.dtsi or driver initialization. */
-	// pinctrl-names = "default";
-	// pinctrl-0 = <&gmac1_sgmii1_pins &mdio_pins>;
-
-	mdio_bus: mdio-bus { // For communication with the external PHY
+	mdio_bus: mdio-bus {
 		#address-cells = <1>;
 		#size-cells = <0>;
-		// reset-delay-us = <10000>; // GL-X3000 does not specify this in mdio_bus
 
-		eth_phy0: ethernet-phy@0 { // PHY at MDIO address 0
-			compatible = "ethernet-phy-id03a2.9461"; // From working Linux DTS
-			reg = <0>; // PHY address on MDIO bus.
-			phy-mode = "gmii"; // Matching extracted Linux DTS and GL-X3000 patch
-			// reset-delay-us = <10000>; // GL-X3000 does not specify this in phy node
-
-			// Optional: PHY interrupt if connected.
-			// Datasheet pin M17 (GBE_INT), Pin sharing table: GBE_INT is GPIO38.
-			// interrupt-parent = <&gpio>;
-			// interrupts = <&gpio 38 IRQ_TYPE_LEVEL_LOW>; // Verify active level
+		eth_phy0: ethernet-phy@0 {
+			compatible = "ethernet-phy-id03a2.9461";
+			reg = <0>;
+			phy-mode = "gmii";
 		};
 	};
 };
 
 &pinctrl {
-	// Pinctrl for SPI0 Flash, based on mt7981-clt-r30b1.dts (20230718)
-	// and datasheet pin descriptions (SPI0_CLK D19, CS B20, MOSI D18, MISO C18, WP C19, HOLD B19)
 	spi_flash_pins: spi0-pins-func-1 {
 		mux {
 			function = "flash";
-			groups = "spi0", "spi0_wp_hold"; // Standard group names
+			groups = "spi0", "spi0_wp_hold";
 		};
-		conf-pu { // HOLD and WP are PU after reset (datasheet)
+		conf-pu {
 			pins = "SPI0_CS", "SPI0_HOLD", "SPI0_WP";
 			drive-strength = <MTK_DRIVE_8mA>;
 			bias-pull-up = <MTK_PUPD_SET_R1R0_11>;
 		};
-		conf-pd { // MISO is PD after reset. CLK/MOSI are OL.
+		conf-pd {
 			pins = "SPI0_CLK", "SPI0_MOSI", "SPI0_MISO";
 			drive-strength = <MTK_DRIVE_8mA>;
-			bias-pull-down = <MTK_PUPD_SET_R1R0_11>; // For MISO. CLK/MOSI might be NO_PULL.
+			bias-pull-down = <MTK_PUPD_SET_R1R0_11>;
 		};
 	};
-
-	/* Pinctrl for GMAC1 SGMII (SGMII1) - Extracted Linux DTS and GL-X3000 patch do not define this explicitly.
-	 * Uses pins shared with PCIe: PCIE_LN0_RXP(G1), PCIE_LN0_RXN(G2),
-	 * PCIE_LN0_TXP(F2), PCIE_LN0_TXN(F1) from datasheet.
-	 * User confirmed: function "eth", group "sgmii1"
-	 */
-	/*
-	gmac1_sgmii1_pins: gmac1-sgmii1-config {
-		mux {
-			function = "eth";
-			groups = "sgmii1";
-		};
-	};
-	*/
-
-	/* Pinctrl for MDIO (SMI - Serial Management Interface) - Extracted Linux DTS and GL-X3000 patch do not define this explicitly.
-	 * Uses pins SMI_MDC(L17 -> GPIO36), SMI_MDIO(K17 -> GPIO37) from datasheet.
-	 * User confirmed: function "mdio", group "mdio"
-	 */
-	/*
-	mdio_pins: mdio-config {
-		mux {
-			function = "mdio";
-			groups = "mdio";
-		};
-	};
-	*/
 };
 
 &watchdog {
-	status = "disabled"; // Common for U-Boot
+	status = "disabled";
 };
 
